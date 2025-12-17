@@ -1,7 +1,7 @@
 package com.pranav_khode.job_posting_service.DTO.request;
 
 
-import com.pranav_khode.job_posting_service.DTO.enums.JobStatus;
+import com.pranav_khode.job_posting_service.enums.JobStatus;
 
 import jakarta.validation.constraints.NotNull;
 

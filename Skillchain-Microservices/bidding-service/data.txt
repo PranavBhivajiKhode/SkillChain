@@ -1,0 +1,41 @@
+{
+  //     id: 2,
+  //     jobId: "1",
+  //     freelancerId: "freelancer2",
+  //     
+  //     bidAmount: 5200,
+  //     deliveryTime: "4 weeks",
+  //     coverLetter:
+  //       "Hello! I specialize in modern web development with React and Node.js. I focus on clean, scalable code and excellent communication throughout the project.",
+  //     status: "pending",
+  //     submittedAt: "2024-01-19",
+  //     
+  //     freelancerName: "Mike Chen",
+  		 skills: ["React", "Node.js", "PostgreSQL", "TypeScript", "Docker"],
+  		 freelancerRating: 4.7,
+  //     freelancerCompletedJobs: 32,
+  //   }
+  
+  
+  
+   private UUID bidId;
+
+    private UUID jobId; 
+    
+    private String freelancerName;
+
+    private UUID freelancerId; 
+
+    private BigDecimal proposedAmount;
+
+    private String proposedCurrency;
+
+    private Integer proposedTimelineDays;
+
+    private String proposalText;
+
+    private BidStatus status;
+
+    private ZonedDateTime createdAt;
+
+    private ZonedDateTime updatedAt;

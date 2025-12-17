@@ -3,7 +3,7 @@ package com.pranav_khode.job_posting_service.DTO.request;
 import java.math.BigDecimal;
 import java.util.List;
 
-import com.pranav_khode.job_posting_service.DTO.enums.JobType;
+import com.pranav_khode.job_posting_service.enums.JobType;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -12,9 +12,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class JobPostRequestDTO {
-    @NotBlank
-    private String clientId;
-
+		
     @NotBlank
     @Size(max = 255)
     private String title;
@@ -38,17 +36,11 @@ public class JobPostRequestDTO {
     @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
     private String deadlineDate; // YYYY-MM-DD
     
+    private List<MilestonePostRequest> milestones;
+    
     public JobPostRequestDTO() {
     	
     }
-
-	public String getClientId() {
-		return clientId;
-	}
-
-	public void setClientId(String clientId) {
-		this.clientId = clientId;
-	}
 
 	public String getTitle() {
 		return title;
@@ -105,7 +97,14 @@ public class JobPostRequestDTO {
 	public void setDeadlineDate(String deadlineDate) {
 		this.deadlineDate = deadlineDate;
 	}
-    
+
+	public List<MilestonePostRequest> getMilestones() {
+		return milestones;
+	}
+
+	public void setMilestones(List<MilestonePostRequest> milestones) {
+		this.milestones = milestones;
+	}
     
 }
 

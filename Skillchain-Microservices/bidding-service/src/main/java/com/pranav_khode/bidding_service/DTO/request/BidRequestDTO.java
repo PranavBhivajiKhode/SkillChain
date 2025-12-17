@@ -15,9 +15,6 @@ public class BidRequestDTO {
     @NotBlank
     private String jobId; 
 
-    @NotBlank
-    private String freelancerId; 
-
     @NotNull
     @DecimalMin("0.0")
     private BigDecimal proposedAmount;
@@ -44,14 +41,6 @@ public class BidRequestDTO {
 
 	public void setJobId(String jobId) {
 		this.jobId = jobId;
-	}
-
-	public String getFreelancerId() {
-		return freelancerId;
-	}
-
-	public void setFreelancerId(String freelancerId) {
-		this.freelancerId = freelancerId;
 	}
 
 	public BigDecimal getProposedAmount() {

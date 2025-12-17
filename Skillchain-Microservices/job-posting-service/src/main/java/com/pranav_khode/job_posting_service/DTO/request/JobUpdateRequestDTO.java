@@ -3,7 +3,7 @@ package com.pranav_khode.job_posting_service.DTO.request;
 import java.math.BigDecimal;
 import java.util.List;
 
-import com.pranav_khode.job_posting_service.DTO.enums.JobType;
+import com.pranav_khode.job_posting_service.enums.JobType;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -14,14 +14,6 @@ import jakarta.validation.constraints.Size;
 public class JobUpdateRequestDTO {
 	@NotBlank
 	private String jobId;
-	
-    public String getJobId() {
-		return jobId;
-	}
-
-	public void setJobId(String jobId) {
-		this.jobId = jobId;
-	}
 
 	@NotBlank
     private String clientId;
@@ -117,6 +109,14 @@ public class JobUpdateRequestDTO {
 
 	public void setDeadlineDate(String deadlineDate) {
 		this.deadlineDate = deadlineDate;
+	}
+	
+	public String getJobId() {
+		return jobId;
+	}
+
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
 	}
     
     

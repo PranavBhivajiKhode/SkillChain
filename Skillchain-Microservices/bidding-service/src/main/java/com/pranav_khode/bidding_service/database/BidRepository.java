@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BidRepository extends JpaRepository<Bid, UUID>{
+	
 	public List<Bid> findAllByJobId(UUID jobId);
+	
 	public List<Bid> findAllByFreelancerId(UUID freelancerId);
 }
