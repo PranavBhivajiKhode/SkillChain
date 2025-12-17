@@ -38,7 +38,7 @@ function OtpVerificationForm() {
 
       if (response.status === 200) {
         setSuccess("OTP verified successfully!");
-        nevigate("/login");
+        nevigate("/login2");
       } else {
         setError(response.data.message || "Invalid OTP.");
       }

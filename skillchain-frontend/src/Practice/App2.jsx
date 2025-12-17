@@ -1,4 +1,5 @@
 import Card from "./Heading";
+import UploadFile from "./UploadFile";
 
 
 function App2(){
@@ -10,6 +11,7 @@ function App2(){
     return(
         <div>
             <h1>{res}</h1>
+            <UploadFile />
         </div>
     )
 }
