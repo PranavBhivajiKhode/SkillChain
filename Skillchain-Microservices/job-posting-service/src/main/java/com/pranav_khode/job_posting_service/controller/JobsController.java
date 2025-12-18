@@ -27,6 +27,7 @@ import com.pranav_khode.job_posting_service.DTO.request.JobPostRequestDTO;
 import com.pranav_khode.job_posting_service.DTO.request.JobStatusUpdateDTO;
 import com.pranav_khode.job_posting_service.DTO.request.JobUpdateRequestDTO;
 import com.pranav_khode.job_posting_service.DTO.request.MilestonePaymentDto;
+import com.pranav_khode.job_posting_service.DTO.response.ActiveJobDtoResponse;
 import com.pranav_khode.job_posting_service.DTO.response.ClientNameAndJobTitle;
 import com.pranav_khode.job_posting_service.DTO.response.JobResponseDTO;
 import com.pranav_khode.job_posting_service.DTO.response.JobResponseForClient;
@@ -74,6 +75,12 @@ public class JobsController {
     public ResponseEntity<Collection<ListActiveJobForClientResponse>> getActiveJobsForClient(@PathVariable String clientId) {
     	List<ListActiveJobForClientResponse> response = service.retreiveActiveJobsForClient(clientId);
     	return ResponseEntity.ok().body(response);
+    }
+    
+    //Fetch in-progress job details using jobId
+    @GetMapping("/active-job/{jobId}/details")
+    public ResponseEntity<ActiveJobDtoResponse> fetchInprogressJob(@PathVariable UUID jobId) throws Exception {
+    	return ResponseEntity.ok().body(service.getInprogressJob(jobId));
     }
 
     //Fetches all jobs for admin.
@@ -167,7 +174,8 @@ public class JobsController {
 		}
     }
     
-  //Fetch job title using jobId for payment service
+  
+    //Fetch job title using jobId for payment service
     @GetMapping("/job-title")
 	public  String retrieveJobTitle(@RequestParam UUID jobId) {
     	try {
@@ -178,6 +186,7 @@ public class JobsController {
     }
     
     @PutMapping("/milestone/payment")
+    
     public void manageMilestonePayment(@RequestBody MilestonePaymentDto dto) {
     	milestoneService.managePayment(dto);
     }
@@ -194,6 +203,7 @@ public class JobsController {
     }
 
     @PutMapping("/{id}")
+    
     public ResponseEntity<JobResponseDTO> updateJob(@PathVariable UUID id,
             				@Valid @RequestBody JobUpdateRequestDTO requestBody) {
         return service.updateJobIntoDatabase(id, requestBody);

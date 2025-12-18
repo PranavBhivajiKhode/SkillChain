@@ -34,8 +34,6 @@ public class Jobs {
     @GeneratedValue
     private UUID jobId;
     
-
-
     @Column(nullable = false)
     private UUID clientId;
 

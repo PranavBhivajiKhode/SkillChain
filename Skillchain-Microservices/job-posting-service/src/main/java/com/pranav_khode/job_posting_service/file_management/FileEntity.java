@@ -26,7 +26,7 @@ public class FileEntity {
     private FileOwnerType ownerType;
 
     // Job ID or Milestone ID (UUID)
-    @Column(nullable = false, columnDefinition = "CHAR(36)")
+    @Column(nullable = false)
     private UUID referenceId;
 
     @Column(nullable = false)

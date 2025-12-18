@@ -30,21 +30,37 @@ public class FileStorageService {
         return targetFile.toString();
     }
 
-	public String saveFile(FileUploadDto dto) throws IOException {
-		
+	public String saveFile(FileUploadDto dto, MultipartFile mf) throws IllegalStateException, IOException {
 		Path targetDir = basePath.resolve(dto.getAssociationType().toString());
 		Files.createDirectories(targetDir);
 		
 		targetDir = targetDir.resolve(dto.getReferenceId().toString());
 		Files.createDirectories(targetDir);
 		
-		Path targetFile = targetDir.resolve(dto.getFile().getOriginalFilename());
+		Path targetFile = targetDir.resolve(mf.getOriginalFilename());
 		
-		dto.getFile().transferTo(targetFile.toFile());
+		mf.transferTo(targetFile.toFile());
 		
 		return targetFile.toString();
-		
 	}
+    
+    
+
+//	public String saveFile(FileUploadDto dto) throws IOException {
+//		
+//		Path targetDir = basePath.resolve(dto.getAssociationType().toString());
+//		Files.createDirectories(targetDir);
+//		
+//		targetDir = targetDir.resolve(dto.getReferenceId().toString());
+//		Files.createDirectories(targetDir);
+//		
+//		Path targetFile = targetDir.resolve(dto.getFile().getOriginalFilename());
+//		
+//		dto.getFile().transferTo(targetFile.toFile());
+//		
+//		return targetFile.toString();
+//		
+//	}
 }
 
 

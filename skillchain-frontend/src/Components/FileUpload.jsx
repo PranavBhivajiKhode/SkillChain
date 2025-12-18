@@ -1,43 +1,39 @@
 "use client"
-import axios from "axios";
 import { useState } from "react"
-// Simplified icons using Bootstrap icons (bi) for consistency
-// import { Upload, X, File, AlertCircle, CheckCircle } from "lucide-react"
+import { uploadFileApiService } from "./Api/FileApiService";
 
 const FileUpload = ({
-  uploadType = "job",
+  uploadType = "MILESTONE",
   entityId,
-  userType = "client",
-  maxFiles = 10,
+  userType = "CLIENT",
+  onUploadSuccess, // Now expects (List<FileEntity>)
+  maxFiles = 5,
   maxFileSize = 10 * 1024 * 1024,
   acceptedTypes = "*/*",
 }) => {
   const [selectedFiles, setSelectedFiles] = useState([])
   const [uploading, setUploading] = useState(false)
-  const [uploadStatus, setUploadStatus] = useState(null) // 'success', 'error', null
+  const [uploadStatus, setUploadStatus] = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
 
   const handleFileSelect = (event) => {
     try {
       const fileList = event.target.files
-
-      if (!fileList || fileList.length === 0) {
-        return
-      }
+      if (!fileList || fileList.length === 0) return
 
       const filesArray = Array.from(fileList)
 
-      if (filesArray.length > maxFiles) {
-        setErrorMessage(`Maximum ${maxFiles} files allowed`)
-        setUploadStatus("error")
-        return
+      if (filesArray.length + selectedFiles.length > maxFiles) {
+        setErrorMessage(`Maximum ${maxFiles} files allowed`);
+        setUploadStatus("error");
+        return;
       }
 
       const oversizedFiles = filesArray.filter((file) => file.size > maxFileSize)
       if (oversizedFiles.length > 0) {
-        setErrorMessage(`Files too large. Maximum size: ${(maxFileSize / (1024 * 1024)).toFixed(1)}MB per file`)
-        setUploadStatus("error")
-        return
+        setErrorMessage(`Files too large. Max: ${(maxFileSize / (1024 * 1024)).toFixed(1)}MB`);
+        setUploadStatus("error");
+        return;
       }
 
       const filesWithMetadata = filesArray.map((file, index) => ({
@@ -45,118 +41,79 @@ const FileUpload = ({
         file: file,
         name: file.name,
         size: file.size,
-        type: file.type,
-        status: "selected",
       }))
 
-      // Append new files to existing ones (or replace if logic dictates)
       setSelectedFiles((prev) => [...prev, ...filesWithMetadata])
       setUploadStatus(null)
       setErrorMessage("")
     } catch (error) {
-      console.error("Error selecting files:", error)
-      setErrorMessage("Error selecting files. Please try again.")
-      setUploadStatus("error")
-    }
-  }
-
-  const onUpload = async (formData, uploadType) => {
-    let url = "";
-
-    if (uploadType === "job") {
-      url = "http://localhost:8100/api/job/files/upload";
-    } else if (uploadType === "milestone") {
-      url = "http://localhost:8100/api/job/milestone/files/upload";
-    }
-
-    const response = await axios.post(url, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    return response.data;
-  };
-
-  const removeFile = (fileId) => {
-    const updatedFiles = selectedFiles.filter((f) => f.id !== fileId);
-    setSelectedFiles(updatedFiles);
-    if (updatedFiles.length === 0) {
-      setUploadStatus(null);
-      setErrorMessage("");
-    }
-  }
-
-  const clearAllFiles = () => {
-    setSelectedFiles([])
-    setUploadStatus(null)
-    setErrorMessage("")
-    // Reset file input
-    const fileInput = document.getElementById(`file-input-${uploadType}-${entityId}`)
-    if (fileInput) {
-      fileInput.value = ""
+      setErrorMessage("Error selecting files.");
+      setUploadStatus("error");
     }
   }
 
   const handleUpload = async () => {
-    if (!selectedFiles.length) {
-      setErrorMessage("Please select files")
-      setUploadStatus("error")
-      return
-    }
-
-    setUploading(true)
+    if (!selectedFiles.length) return;
+    setUploading(true);
+    setUploadStatus(null);
 
     try {
-      const formData = new FormData()
+      const formData = new FormData();
 
-      selectedFiles.forEach(f => {
-        formData.append("files", f.file) // MUST be "files"
-      })
+      // Append each file using the key "file" to match the DTO array name
+      selectedFiles.forEach(fileObj => {
+        formData.append("file", fileObj.file);
+      });
 
-      if (uploadType === "job") {
-        formData.append("jobId", entityId)
+      // Append other fields
+      formData.append("associationType", uploadType.toUpperCase());
+      formData.append("ownerType", userType.toUpperCase());
+      formData.append("referenceId", entityId);
+
+      // Make the call
+      const response = await uploadFileApiService(formData);
+
+      if (response.status === 200) {
+        setUploadStatus("success");
+        setSelectedFiles([]);
+        if (onUploadSuccess) {
+          onUploadSuccess(response.data);
+        }
       } else {
-        formData.append("milestoneId", entityId)
+        throw new Error("Server returned an unsuccessful status.");
       }
-
-      formData.append("userType", userType)
-
-      await onUpload(formData, uploadType)
-
-      setUploadStatus("success")
-      setSelectedFiles([])
     } catch (err) {
-      console.error(err)
-      setErrorMessage("Upload failed")
-      setUploadStatus("error")
+      console.error("Upload Error:", err);
+      setErrorMessage(err.response?.data?.message || "Upload failed.");
+      setUploadStatus("error");
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
+  const removeFile = (fileId) => {
+    setSelectedFiles(prev => prev.filter(f => f.id !== fileId))
+  }
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return (bytes / Math.pow(1024, i)).toFixed(2) + " " + ["Bytes", "KB", "MB", "GB"][i]
   }
 
   return (
-    <div className="p-3 border border-2 border-dashed rounded-3 bg-light">
+    <div className="p-3 border border-2 border-dashed rounded-3 bg-white shadow-sm">
       <div className="text-center">
-        <i className="bi bi-cloud-arrow-up display-4 text-muted mb-3"></i>
-        <div className="mb-3">
+        <i className="bi bi-cloud-arrow-up fs-2 text-primary mb-2"></i>
+        <div className="mb-2">
           <label
-            htmlFor={`file-input-${uploadType}-${entityId}`}
-            className="cursor-pointer d-inline-flex align-items-center px-4 py-2 border border-transparent text-sm fw-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            htmlFor={`file-input-${entityId}`}
+            className="btn btn-outline-primary btn-sm fw-bold px-3 rounded-pill cursor-pointer"
           >
-            <i className="bi bi-file-earmark-plus me-2"></i> Select Files
+            <i className="bi bi-plus-lg me-1"></i> Add Files
           </label>
           <input
-            id={`file-input-${uploadType}-${entityId}`}
+            id={`file-input-${entityId}`}
             type="file"
             multiple
             accept={acceptedTypes}
@@ -164,75 +121,49 @@ const FileUpload = ({
             className="d-none"
           />
         </div>
-        <p className="text-sm text-muted">
-          Max {maxFiles} files, {(maxFileSize / (1024 * 1024)).toFixed(1)}MB each
+        <p className="text-muted" style={{ fontSize: '0.7rem' }}>
+          Max {maxFiles} files (Up to {(maxFileSize / (1024 * 1024)).toFixed(0)}MB each)
         </p>
       </div>
 
       {selectedFiles.length > 0 && (
-        <div className="mt-4 pt-3 border-top">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h4 className="text-sm fw-medium text-dark">Selected Files ({selectedFiles.length})</h4>
-            <button onClick={clearAllFiles} className="btn btn-link btn-sm text-danger p-0">
-              Clear All
-            </button>
-          </div>
-          <div className="space-y-2 overflow-y-auto" style={{ maxHeight: '150px' }}>
+        <div className="mt-3 border-top pt-2">
+          <div className="list-group list-group-flush mb-3" style={{ maxHeight: '120px', overflowY: 'auto' }}>
             {selectedFiles.map((fileObj) => (
-              <div key={fileObj.id} className="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
-                <div className="d-flex align-items-center space-x-2 flex-grow-1 min-w-0">
-                  <i className="bi bi-file-earmark fs-5 text-secondary flex-shrink-0 me-2"></i>
-                  <div className="flex-grow-1 min-w-0">
-                    <p className="text-sm fw-medium text-dark text-truncate mb-0">{fileObj.name}</p>
-                    <p className="text-xs text-muted mb-0">{formatFileSize(fileObj.size)}</p>
-                  </div>
+              <div key={fileObj.id} className="list-group-item d-flex align-items-center justify-content-between p-2 border-0 bg-light rounded mb-1">
+                <div className="text-truncate me-2" style={{ fontSize: '0.8rem' }}>
+                  <i className="bi bi-file-earmark me-1"></i> {fileObj.name}
                 </div>
-                <button
-                  onClick={() => removeFile(fileObj.id)}
-                  className="btn btn-sm btn-outline-danger border-0 ms-2 flex-shrink-0"
-                >
-                  <i className="bi bi-x fs-5"></i>
+                <button onClick={() => removeFile(fileObj.id)} className="btn btn-link btn-sm text-danger p-0 border-0">
+                  <i className="bi bi-trash"></i>
                 </button>
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {selectedFiles.length > 0 && (
-        <div className="mt-4">
           <button
             onClick={handleUpload}
-            disabled={uploading || selectedFiles.length === 0}
-            className="w-100 d-flex justify-content-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm fw-medium text-white bg-success hover:bg-success-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={uploading}
+            className="btn btn-success btn-sm w-100 fw-bold shadow-sm"
           >
             {uploading ? (
-              <>
-                <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-                Uploading...
-              </>
+              <span className="spinner-border spinner-border-sm me-2"></span>
             ) : (
-              `Upload ${selectedFiles.length} File${selectedFiles.length > 1 ? "s" : ""}`
+              <><i className="bi bi-upload me-2"></i>Upload {selectedFiles.length} File(s)</>
             )}
           </button>
         </div>
       )}
 
       {uploadStatus === "success" && (
-        <div className="mt-4 p-3 alert alert-success d-flex align-items-center">
-          <i className="bi bi-check-circle-fill me-2 fs-5"></i>
-          <p className="text-sm mb-0">Files uploaded successfully!</p>
-        </div>
+        <div className="mt-2 py-1 px-2 alert alert-success small mb-0"><i className="bi bi-check-circle me-1"></i> Uploaded!</div>
       )}
 
-      {uploadStatus === "error" && errorMessage && (
-        <div className="mt-4 p-3 alert alert-danger d-flex align-items-center">
-          <i className="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-          <p className="text-sm mb-0">{errorMessage}</p>
-        </div>
+      {uploadStatus === "error" && (
+        <div className="mt-2 py-1 px-2 alert alert-danger small mb-0"><i className="bi bi-exclamation-circle me-1"></i> {errorMessage}</div>
       )}
     </div>
   )
 }
 
-export default FileUpload
+export default FileUpload;

@@ -17,7 +17,7 @@ public class FileUploadDto {
 	// Job ID or Milestone ID (UUID)
 	private UUID referenceId;
 	
-	private MultipartFile file;
+	private MultipartFile[] file;
 
 	public FileAssociationType getAssociationType() {
 		return associationType;
@@ -43,11 +43,11 @@ public class FileUploadDto {
 		this.referenceId = referenceId;
 	}
 
-	public MultipartFile getFile() {
+	public MultipartFile[] getFile() {
 		return file;
 	}
 
-	public void setFile(MultipartFile file) {
+	public void setFile(MultipartFile[] file) {
 		this.file = file;
 	}
 	

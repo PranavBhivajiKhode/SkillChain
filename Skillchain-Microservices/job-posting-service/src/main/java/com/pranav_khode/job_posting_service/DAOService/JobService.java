@@ -19,19 +19,24 @@ import com.pranav_khode.job_posting_service.DTO.request.CustomArgumentsJobFilter
 import com.pranav_khode.job_posting_service.DTO.request.JobPostRequestDTO;
 import com.pranav_khode.job_posting_service.DTO.request.JobStatusUpdateDTO;
 import com.pranav_khode.job_posting_service.DTO.request.JobUpdateRequestDTO;
+import com.pranav_khode.job_posting_service.DTO.response.ActiveJobDtoResponse;
 import com.pranav_khode.job_posting_service.DTO.response.ClientNameAndJobTitle;
 import com.pranav_khode.job_posting_service.DTO.response.JobResponseDTO;
 import com.pranav_khode.job_posting_service.DTO.response.JobResponseForClient;
 import com.pranav_khode.job_posting_service.DTO.response.JobResponseForFreelancer;
 import com.pranav_khode.job_posting_service.DTO.response.ListActiveJobForClientResponse;
 import com.pranav_khode.job_posting_service.DTO.response.ListMilestoneForActiveJob;
+import com.pranav_khode.job_posting_service.DTO.response.MilestoneForActiveJob;
 import com.pranav_khode.job_posting_service.DTO.response.MilestoneResponseForJob;
 import com.pranav_khode.job_posting_service.database.JobSpecifications;
 import com.pranav_khode.job_posting_service.database.Jobs;
 import com.pranav_khode.job_posting_service.database.JobsRepository;
 import com.pranav_khode.job_posting_service.database.Milestone;
 import com.pranav_khode.job_posting_service.database.MilestoneRepository;
+import com.pranav_khode.job_posting_service.enums.FileAssociationType;
 import com.pranav_khode.job_posting_service.enums.JobStatus;
+import com.pranav_khode.job_posting_service.file_management.FileEntity;
+import com.pranav_khode.job_posting_service.file_management.FileEntityRepository;
 import com.pranav_khode.job_posting_service.proxy.UserServiceProxy;
 import com.pranav_khode.job_posting_service.records.JobTitleAndMilestoneTitle;
 
@@ -47,10 +52,12 @@ public class JobService {
 //    private final MilestoneFileRepository milestoneFileRepository;
     private final MilestoneService milestoneService;
     private final UserServiceProxy userServiceProxy;
-
+    
+    private final FileEntityRepository fileEntityRepository;
     public JobService(JobsRepository jobRepository, MilestoneService milestoneService, 
     		UserServiceProxy userServiceProxy,
-    		MilestoneRepository milestoneRepository
+    		MilestoneRepository milestoneRepository,
+    		FileEntityRepository fileEntityRepository
     		) {
         this.jobRepository = jobRepository;
         this.userServiceProxy = userServiceProxy;
@@ -58,6 +65,7 @@ public class JobService {
         this.milestoneRepository = milestoneRepository;
 //        this.milestoneFileRepository = milestoneFileRepository;
         this.milestoneService = milestoneService;
+        this.fileEntityRepository = fileEntityRepository;
     }
     
     //Save job to database
@@ -275,6 +283,55 @@ public class JobService {
 
         return map.values();
     }
+    
+    public ActiveJobDtoResponse getInprogressJob(UUID jobId) throws Exception {
+    	Jobs job = jobRepository.findById(jobId).orElse(null);
+    	
+    	if(job == null) {
+    		throw new Exception("Job not found for id : " + jobId);
+    	}
+    	
+    	ActiveJobDtoResponse activeJob = new ActiveJobDtoResponse();
+    	
+    	activeJob.setJobId(job.getJobId());
+    	activeJob.setTitle(job.getTitle());
+    	activeJob.setDescription(job.getDescription());
+    	activeJob.setBudget(job.getBudgetAmount());
+    	activeJob.setCurrency(job.getBudgetCurrency());
+    	activeJob.setDeadlineData(job.getDeadlineDate());
+    	activeJob.setStatus(job.getStatus());
+    	activeJob.setMilestones(new ArrayList<MilestoneForActiveJob>());
+    	activeJob.setFiles(new ArrayList<FileEntity>());
+    	activeJob.setAssignedFreelancerId(job.getAssignedFreelancerId());
+    	activeJob.setCompletionDate(job.getCompletionDate());
+    	activeJob.setPaid(job.isPaid());
+    	
+    	List<FileEntity> jobFiles = fileEntityRepository.findByReferenceIdAndAssociationType(jobId, FileAssociationType.JOB);
+    	activeJob.getFiles().addAll(jobFiles);
+    	
+    	List<Milestone> milestones = milestoneRepository.findByJob(job);
+    	
+    	for(Milestone milestone : milestones) {
+    		MilestoneForActiveJob activeMilestone = new MilestoneForActiveJob();
+    		activeMilestone.setMilestoneId(milestone.getMilestoneId());
+    		activeMilestone.setTitle(milestone.getTitle());
+    		activeMilestone.setDescription(milestone.getDescription());
+    		activeMilestone.setBudgetAmount(milestone.getBudgetAmount());
+    		activeMilestone.setBudgetCurrency(milestone.getBudgetCurrency());
+    		activeMilestone.setStatus(milestone.getStatus());
+    		activeMilestone.setFiles(new ArrayList<FileEntity>());
+    		activeMilestone.setOrderIndex(milestone.getOrderIndex());
+    		activeMilestone.setDeadlineDate(milestone.getDeadlineDate());
+    		activeMilestone.setPaid(milestone.isPaid());
+    		
+    		List<FileEntity> milestoneFiles = fileEntityRepository.findByReferenceIdAndAssociationType(milestone.getMilestoneId(), FileAssociationType.MILESTONE);
+    		activeMilestone.getFiles().addAll(milestoneFiles);
+    		
+    		activeJob.getMilestones().add(activeMilestone);
+    	}
+    	
+    	return activeJob;
+	}
 
     
     //Fetches 10 jobs for freelancer when page loads
@@ -581,6 +638,8 @@ public class JobService {
                 String.format("Job entity with id -> %s not found!", jobId)));
 		
 	}
+
+	
 }
 
 

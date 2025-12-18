@@ -41,4 +41,14 @@ export const updateJobStatus = (jobId, status) =>
 
 export const uploadFilesForMilestone = (formData) =>
     apiClient.get("/")
-    
+
+export const getJobDetailsById = (jobId) =>
+    apiClient.get(`/jobs/active-job/${jobId}/details`)
+
+// Not configured yet
+// Demo
+export const updateMilestoneStatusApi = (jobId, milestoneId, newStatus) =>
+    apiClient.put(`/jobs/${jobId}/milestones/${milestoneId}/update-status`, null, {
+        params: { updatedStatus: newStatus }
+    });
+

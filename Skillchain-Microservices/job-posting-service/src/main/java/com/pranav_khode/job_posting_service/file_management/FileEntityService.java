@@ -1,10 +1,12 @@
 package com.pranav_khode.job_posting_service.file_management;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.pranav_khode.job_posting_service.enums.FileAssociationType;
 
@@ -20,19 +22,26 @@ public class FileEntityService {
 		this.fileStorageService = fileStorageService;
 	}
 
-	public FileEntity upload(FileUploadDto dto) throws IOException {
-		String path = fileStorageService.saveFile(dto);
+	public List<FileEntity> upload(FileUploadDto dto) throws IOException {
 		
-		FileEntity fileData = new FileEntity();
-		fileData.setAssociationType(dto.getAssociationType());
-		fileData.setOwnerType(dto.getOwnerType());
-		fileData.setReferenceId(dto.getReferenceId());
-		fileData.setFileName(dto.getFile().getOriginalFilename());
-		fileData.setFileType(dto.getFile().getContentType());
-		fileData.setFileSize(dto.getFile().getSize());
-		fileData.setFilePath(path);
+		List<FileEntity> fileEntityList = new ArrayList<FileEntity>();
 		
-		return fileEntityRepository.save(fileData);
+		for(MultipartFile mf : dto.getFile()) {
+			String path = fileStorageService.saveFile(dto, mf);
+			
+			FileEntity fileData = new FileEntity();
+			fileData.setAssociationType(dto.getAssociationType());
+			fileData.setOwnerType(dto.getOwnerType());
+			fileData.setReferenceId(dto.getReferenceId());
+			fileData.setFileName(mf.getOriginalFilename());
+			fileData.setFileType(mf.getContentType());
+			fileData.setFileSize(mf.getSize());
+			fileData.setFilePath(path);
+			
+			fileEntityList.add(fileData);
+		}
+		
+		return fileEntityRepository.saveAll(fileEntityList);
 	}
 
 	public FileEntity getFile(UUID fileId) throws Exception {

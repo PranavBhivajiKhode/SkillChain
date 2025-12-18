@@ -11,11 +11,10 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,8 +25,8 @@ import com.pranav_khode.job_posting_service.file_management.FileUploadDto;
 
 
 @RestController
-@RequestMapping("/api/files")
-@CrossOrigin
+@RequestMapping("/jobs/files")
+//@CrossOrigin
 public class FileController {
 
 //    private final FileService service;
@@ -38,19 +37,13 @@ public class FileController {
     }
     
     @PostMapping("/upload")
-    public ResponseEntity<FileEntity> uploadFile(@RequestBody FileUploadDto dto) throws IOException {
-    	FileEntity fileEntity = fileEntityService.upload(dto);
-    	return ResponseEntity.ok().body(fileEntity);
-    }
+	 // Change @RequestBody to @ModelAttribute
+	 public ResponseEntity<List<FileEntity>> uploadFile(@ModelAttribute FileUploadDto dto) throws IOException {
+	     List<FileEntity> fileEntities = fileEntityService.upload(dto);
+	     return ResponseEntity.ok().body(fileEntities);
+	 }
 
-//    @PostMapping(value = "/upload", consumes = "multipart/form-data")
-//    public ResponseEntity<?> upload(
-//            @RequestParam MultipartFile file,
-//            @RequestParam Long userId) throws Exception {
-//
-//        service.upload(file, userId);
-//        return ResponseEntity.ok("Uploaded");
-//    }
+
     
     @GetMapping("job/{jobId}")
     public ResponseEntity<List<FileEntity>> getFilesForJob(@PathVariable UUID jobId) {
@@ -61,12 +54,6 @@ public class FileController {
     public ResponseEntity<List<FileEntity>> getFilesForMilestone(@PathVariable UUID milestoneId) {
     	return ResponseEntity.ok().body(fileEntityService.getFilesForMilestone(milestoneId));
     }
-    
-
-//    @GetMapping("/user/{userId}")
-//    public List<UserFile> list(@PathVariable Long userId) {
-//        return service.getUserFiles(userId);
-//    }
     
     @GetMapping("get/{fileId}")
     public ResponseEntity<Resource> getFile(@PathVariable UUID fileId) throws Exception{
@@ -84,6 +71,22 @@ public class FileController {
 	                        "attachment; filename=\"" + fileData.getFileName() + "\"")
 	                .body(resource);
     }
+    
+//  @PostMapping(value = "/upload", consumes = "multipart/form-data")
+//  public ResponseEntity<?> upload(
+//          @RequestParam MultipartFile file,
+//          @RequestParam Long userId) throws Exception {
+//
+//      service.upload(file, userId);
+//      return ResponseEntity.ok("Uploaded");
+//  }
+    
+
+//    @GetMapping("/user/{userId}")
+//    public List<UserFile> list(@PathVariable Long userId) {
+//        return service.getUserFiles(userId);
+//    }
+    
     
 //    @GetMapping("/download/{id}")
 //    public ResponseEntity<Resource> download(@PathVariable Long id) throws IOException {
